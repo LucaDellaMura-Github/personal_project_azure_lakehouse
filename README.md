@@ -15,10 +15,10 @@ Modern analytics needs have often grown beyond only relying on structured data i
  + cost must stay managable with a azure students subscription
 
 ## Core features
-+ **Medaillion-Architecture**
-+ **SCD-Historization2**
-+ **Dimensional Data Modeling**
-+ **Data Ingestion**´
+- **Medaillion-Architecture**
+- **SCD2-Historization**
+- **Dimensional Data Modeling**
+- **Data Ingestion**´
 - **Data Processing**
 - **Analytics**´
 - **Orchestration/CICD**
@@ -40,7 +40,7 @@ Modern analytics needs have often grown beyond only relying on structured data i
 | Bronce Layer    | Ingestion of raw JSON from API into Azure Blob Storage  | Week 1  |
 | Silver Layer   | Cleaned and flattened JSON data in Parquet data with SCD2  | Week 2 |
 | Gold Layer   | Delta Lake Tables with star schema model and Synapse Queries/ Visualization| Week 3 +4|
-1. | Documentation   | Readme | Week 1/4 |
+| Documentation   | Readme | Week 1/4 |
 
 ## Setup and Deployment
 ## License
