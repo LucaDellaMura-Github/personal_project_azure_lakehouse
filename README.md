@@ -14,6 +14,16 @@ Modern analytics needs have often grown beyond only relying on structured data i
  + must handle semi-structured data like JSON
  + cost must stay managable with a azure students subscription
 
+## Core features
++ **Medaillion-Architecture**
++ **SCD-Historization2**
++ **Dimensional Data Modeling**
++ **Data Ingestion**´
+- **Data Processing**
+- **Analytics**´
+- **Orchestration/CICD**
+
+
 ## Tools and technology
 
 ## Architecture
@@ -24,5 +34,13 @@ Modern analytics needs have often grown beyond only relying on structured data i
 ### Scope
 4 weeks development time
 ### Delievarables
+
+| Milestone | Description | Week |
+|----------|----------|----------|
+| Bronce Layer    | Ingestion of raw JSON from API into Azure Blob Storage  | Week 1  |
+| Silver Layer   | Cleaned and flattened JSON data in Parquet data with SCD2  | Week 2 |
+| Gold Layer   | Delta Lake Tables with star schema model and Synapse Queries/ Visualization| Week 3 +4|
+1. | Documentation   | Readme | Week 1/4 |
+
 ## Setup and Deployment
 ## License
