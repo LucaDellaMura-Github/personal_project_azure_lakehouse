@@ -1,5 +1,5 @@
 # Lakehouse for TMDB movie analystics with Azure and Delta Lake
-Portfolio-project developing a three stage data lakehouse
+personal project developing a three stage data lakehouse
 
 ## Motivation
 
