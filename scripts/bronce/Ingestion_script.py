@@ -1,0 +1,1 @@
+## this script ingests the data from the tmdp api into azure blob storage
