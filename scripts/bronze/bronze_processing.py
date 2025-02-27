@@ -4,13 +4,22 @@ from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 import requests
 import json
+import os
 
 def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Python HTTP trigger function processed a request.")
-    
+        # Determine the environment and pick the appropriate Key Vault URL
+    app_env = os.getenv("APP_ENV", "test")
+    if app_env.lower() == "prod":
+        key_vault_url = os.getenv("PROD_KEY_VAULT_URL")
+    else:
+        key_vault_url = os.getenv("TEST_KEY_VAULT_URL")
+
+    if not key_vault_url:
+        return func.HttpResponse("Key Vault URL not configured.", status_code=500)
     # Authenticate with Azure Key Vault
     credential = DefaultAzureCredential()
-    client = SecretClient(vault_url="https://TestLakehouseKeyVault.vault.azure.net/", credential=credential)
+    client = SecretClient(vault_url= key_vault_url, credential=credential)
     secret = client.get_secret("apikeytmdb")
     
     # Fetch movie data
