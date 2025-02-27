@@ -5,12 +5,7 @@ from azure.keyvault.secrets import SecretClient
 import requests
 import json
 
-# Create the Function App
-app = func.FunctionApp()
-
-# Use the @app.route decorator instead json approach
-@app.route(route="HttpTrigger")
-def get_movies(req: func.HttpRequest) -> func.HttpResponse:
+def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Python HTTP trigger function processed a request.")
     
     # Authenticate with Azure Key Vault
