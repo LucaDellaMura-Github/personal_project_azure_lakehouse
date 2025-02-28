@@ -61,6 +61,22 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
    
     # Reset buffer position to the beginning
     parquet_buffer.seek(0)
+
+     # get connection string, container name and blob name to storage depending on environment
+    if app_env.lower() == "prod":
+        connection_string = os.getenv("PROD_Connection_string")
+        container_name = os.getenv("PROD_container_name")
+        blob_name = os.getenv("PROD_blob_name")
+    else:
+        connection_string = os.getenv("TEST_Connection_string")
+        container_name = os.getenv("TEST_container_name")
+        blob_name = os.getenv("TEST_blob_name")
+     # connect to azure storage
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+
+    # upload to azure storage
+    blob_client.upload_blob(parquet_buffer, overwrite=True)
   
 
     # Return appropriate response
