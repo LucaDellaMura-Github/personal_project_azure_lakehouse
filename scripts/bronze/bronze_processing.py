@@ -79,11 +79,6 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     blob_client.upload_blob(parquet_buffer, overwrite=True)
   
 
-    # Return appropriate response
-    if name:
-        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
-    else:
-      
-        return func.HttpResponse(json.dumps(response_all), mimetype="application/json")
+   
         
    

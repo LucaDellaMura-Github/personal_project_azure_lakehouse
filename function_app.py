@@ -7,6 +7,8 @@ app = func.FunctionApp()
 @app.function_name(name="BronzeFunction")
 @app.route(route="bronze")
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    # Call the bronze layer processing logic
-    result = ingest_bronze_data(req)
-    return result
+    try:
+        ingest_bronze_data(req)  # function doing all the ingestion work
+        return func.HttpResponse("Bronze data ingestion successful!", status_code=200)
+    except Exception as e:
+        return func.HttpResponse(f" Error in Bronze ingestion: {str(e)}", status_code=500)
