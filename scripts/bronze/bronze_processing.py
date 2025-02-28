@@ -10,6 +10,7 @@ import pyarrow.parquet as pq
 import pyarrow.json as paj
 import io
 from azure.storage.blob import BlobServiceClient
+import datetime
 
 def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Python HTTP trigger function processed a request.")
@@ -52,6 +53,15 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
             pass
     # convert JSON into pyarrow table
     table = paj.read_json(io.BytesIO(json.dumps(response_all).encode()))
+
+    # add data audibility columns
+  
+    ingestion_time = pa.array([datetime.now().isoformat()] * len(table))  # Current time for all rows as pyarrow requires
+    data_source = pa.array(["api.themoviedb.org/3/discover/movie?include_adult=true&include_video=false&language=en-US&page={i}&primary_release_year=2023&sort_by=popularity.desc"] * len(table))  # Static source name for all rows
+
+    # Append metadata columns to the table
+    table = table.append_column("ingestion_time", pa.array(ingestion_time))
+    table = table.append_column("data_source", pa.array(data_source))
 
     # convert to parquet
     parquet_buffer = io.BytesIO()
