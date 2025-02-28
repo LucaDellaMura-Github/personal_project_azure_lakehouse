@@ -5,6 +5,11 @@ from azure.keyvault.secrets import SecretClient
 import requests
 import json
 import os
+import pyarrow as pa
+import pyarrow.parquet as pq
+import pyarrow.json as paj
+import io
+from azure.storage.blob import BlobServiceClient
 
 def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Python HTTP trigger function processed a request.")
@@ -45,7 +50,19 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
             name = req_body.get('name')
         except ValueError:
             pass
-    
+    # convert JSON into pyarrow table
+    table = paj.read_json(io.BytesIO(json.dumps(response_all).encode()))
+
+    # convert to parquet
+    parquet_buffer = io.BytesIO()
+    pq.write_table(table, parquet_buffer)
+
+   
+   
+    # Reset buffer position to the beginning
+    parquet_buffer.seek(0)
+  
+
     # Return appropriate response
     if name:
         return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
