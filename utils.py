@@ -11,6 +11,7 @@ import pyarrow.json as paj
 import io
 from azure.storage.blob import BlobServiceClient
 import datetime
+from time import sleep
 
 def get_api_key(app_env):
     logging.info(f"fetching api key in {app_env}-environment")
@@ -30,15 +31,17 @@ def get_api_key(app_env):
 def fetch_data(secret):
     logging.info(f"fetching data from api")
     response_all = []
-    for i in range(1, 51):
-        url = f"https://api.themoviedb.org/3/discover/movie?include_adult=true&include_video=false&language=en-US&page={i}&primary_release_year=2023&sort_by=popularity.desc"
-        headers = {
-            "accept": "application/json",
-            "Authorization": f"Bearer {secret.value}"
-        }
-       
-        response = requests.get(url, headers=headers)
-        response_all.append(response.json())  # Append JSON response
+    for j in range(2000,2023):
+        for i in range(1, 51):
+            url = f"https://api.themoviedb.org/3/discover/movie?include_adult=true&include_video=false&language=en-US&page={i}&primary_release_year={j}&sort_by=popularity.desc"
+            headers = {
+                "accept": "application/json",
+                "Authorization": f"Bearer {secret.value}"
+            }
+        
+            response = requests.get(url, headers=headers)
+            response_all.append(response.json())  # Append JSON response
+            sleep(30)
 
     
     # Log the total responses fetched
