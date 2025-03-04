@@ -6,7 +6,7 @@ app = func.FunctionApp()
 
 @app.function_name(name="BronzeFunction")
 @app.route(route="bronze")
-@app.timer_trigger(schedule="0 0 0 0 */12 *", arg_name="myTimer")
+# @app.timer_trigger(schedule="0 0 0 0 */12 *", arg_name="myTimer")
 def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         ingest_bronze_data(req)  # function doing all the ingestion work
