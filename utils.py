@@ -44,8 +44,11 @@ def fetch_data(secret):
                 "accept": "application/json",
                 "Authorization": f"Bearer {secret.value}"
             }
+            logging.debug(f"Requesting URL: {url}")
             try:
                 response = requests.get(url, headers=headers)
+                logging.debug(f"API response status: {response.status_code}")
+                logging.debug(f"API response text: {response.text[:500]}")  # Limit to 500 chars for brevity
                 if response.status_code == 200:
                     data = response.json()
                     response_all.extend(data.get("results", []))
@@ -62,9 +65,7 @@ def fetch_data(secret):
          
 
     
-    # Log the total responses fetched
-    logging.info(f"Fetched {len(response_all)} pages of movie data.")
-    return response_all
+  
 
 def upload_data_to_azure(app_env,parquet_buffer):
     logging.info(f"upload data in {app_env}-environment")

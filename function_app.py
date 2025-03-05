@@ -1,5 +1,6 @@
 import azure.functions as func
 from scripts.bronze.bronze_processing import ingest_bronze_data
+import logging
 
 app = func.FunctionApp()
 
@@ -12,4 +13,5 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         ingest_bronze_data(req)  # function doing all the ingestion work
         return func.HttpResponse("Bronze data ingestion successful!", status_code=200)
     except Exception as e:
+        logging.exception("Error in Bronze ingestion")
         return func.HttpResponse(f" Error in Bronze ingestion: {str(e)}", status_code=500)
