@@ -13,6 +13,12 @@ from azure.storage.blob import BlobServiceClient
 import datetime
 from time import sleep
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+
 def get_api_key(app_env):
     logging.info(f"fetching api key in {app_env}-environment")
     # get key vault url depending on environment
@@ -22,7 +28,7 @@ def get_api_key(app_env):
         key_vault_url = os.getenv("TEST_KEY_VAULT_URL")
 
     if not key_vault_url:
-        return func.HttpResponse("Key Vault URL not configured.", status_code=500)
+        raise ValueError("Key Vault URL not configured")
     # Authenticate with Azure Key Vault
     credential = DefaultAzureCredential()
     client = SecretClient(vault_url= key_vault_url, credential=credential)
@@ -42,7 +48,7 @@ def fetch_data(secret):
             #response = requests.get(url, headers=headers)
             #response_all.append(response.json())  # Append JSON response
            
-            for j in range(2020, 2022):  # Example: 2 years
+            for j in range(2020, 2002):  # Example: 2 years
                 for i in range(1, 51):  # 50 pages per year
                     url = f"https://api.themoviedb.org/3/discover/movie?...page={i}&primary_release_year={j}..."
                     response = requests.get(url, headers=headers)
