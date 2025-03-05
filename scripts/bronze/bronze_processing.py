@@ -21,35 +21,57 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     
     # Determine the environment and pick the appropriate Key Vault URL
     app_env = os.getenv("APP_ENV", "test")
-    
-    secret = get_api_key(app_env, )
+    try:
+        secret = get_api_key(app_env, )
+    except Exception as error: 
+        logging.error("something went wrong with getting the api key:", type(error).__name__, "–", error)
+
+
     
     # Fetch movie data
-    response_all = fetch_data(secret)
+    try:
+        response_all = fetch_data(secret)
+    except Exception as error:
+        logging.error("error with fetching all the data:", type(error).__name__, "–", error)
+
     
     
     # convert JSON into pyarrow table
-    table = paj.read_json(io.BytesIO(json.dumps(response_all).encode()))
+    try:
+        table = paj.read_json(io.BytesIO(json.dumps(response_all).encode()))
+    except Exception as error:
+        logging.error("error with conversion into pa table:",type(error).__name__, "–", error)
 
     # add data auditability columns
-  
-    ingestion_time = pa.array([datetime.datetime.now().isoformat()] * len(table))  # Current time for all rows as pyarrow requires
-    data_source = pa.array(["api.themoviedb.org/3/discover/movie?include_adult=true&include_video=false&language=en-US&page={i}&primary_release_year=2023&sort_by=popularity.desc"] * len(table))  # Static source name for all rows
 
-    # Append metadata columns to the table
-    table = table.append_column("ingestion_time", pa.array(ingestion_time))
-    table = table.append_column("data_source", pa.array(data_source))
+    try: 
+        ingestion_time = pa.array([datetime.datetime.now().isoformat()] * len(table))  # Current time for all rows as pyarrow requires
+        data_source = pa.array(["api.themoviedb.org/3/discover/movie?include_adult=true&include_video=false&language=en-US&page={i}&primary_release_year=2023&sort_by=popularity.desc"] * len(table))  # Static source name for all rows
+
+        # Append metadata columns to the table
+        table = table.append_column("ingestion_time", pa.array(ingestion_time))
+        table = table.append_column("data_source", pa.array(data_source))
+    except Exception as error:
+        logging.error("error with adding the metadata:", type(error).__name__, "–", error)
 
     # convert to parquet
-    parquet_buffer = io.BytesIO()
-    pq.write_table(table, parquet_buffer)
+    try:
 
-   
-   
-    # Reset buffer position to the beginning
-    parquet_buffer.seek(0)
+        parquet_buffer = io.BytesIO()
+        pq.write_table(table, parquet_buffer)
 
-    upload_data_to_azure(app_env,parquet_buffer)
+    
+    
+        # Reset buffer position to the beginning
+        parquet_buffer.seek(0)
+    except Exception as error:
+        logging.error("error with converting pa table to parquet:",type(error).__name__, "–", error)
+
+    try:
+        upload_data_to_azure(app_env,parquet_buffer)
+    except Exception as error:
+        logging.error("error with uploading to azure:", type(error).__name__, "–", error)
+        
 
     #exit logging
     execution_time = (datetime.datetime.now() - request_time).total_seconds()

@@ -31,7 +31,7 @@ def get_api_key(app_env):
 def fetch_data(secret):
     logging.info(f"fetching data from api")
     response_all = []
-    for j in range(2000,2023):
+    for j in range(2000,2003):
         for i in range(1, 51):
             url = f"https://api.themoviedb.org/3/discover/movie?include_adult=true&include_video=false&language=en-US&page={i}&primary_release_year={j}&sort_by=popularity.desc"
             headers = {
@@ -39,9 +39,22 @@ def fetch_data(secret):
                 "Authorization": f"Bearer {secret.value}"
             }
         
-            response = requests.get(url, headers=headers)
-            response_all.append(response.json())  # Append JSON response
-            sleep(30)
+            #response = requests.get(url, headers=headers)
+            #response_all.append(response.json())  # Append JSON response
+           
+            for j in range(2020, 2022):  # Example: 2 years
+                for i in range(1, 51):  # 50 pages per year
+                    url = f"https://api.themoviedb.org/3/discover/movie?...page={i}&primary_release_year={j}..."
+                    response = requests.get(url, headers=headers)
+                    data = response.json()
+                    if response.status_code != 200:
+                        logging.error(f"API call failed for year {j}, page {i}: {response.text}")
+                        continue
+                    response_all.extend(data.get("results", []))  # Flatten 'results' into the list
+                logging.debug.(f"fetched the year{j}")
+                logging.debug.(f"last movie fetched: ", response_all[-1])
+            
+         
 
     
     # Log the total responses fetched
