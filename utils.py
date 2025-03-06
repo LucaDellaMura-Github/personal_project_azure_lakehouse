@@ -37,7 +37,7 @@ def get_api_key(app_env):
 def fetch_data(secret):
     logging.info(f"fetching data from api")
     response_all = []
-    for year in range(2020, 2021):  # Example: 2 years
+    for year in range(2000, 2024):  
         for page in range(1, 51):  # 50 pages per year
             url = f"https://api.themoviedb.org/3/discover/movie?...page={page}&primary_release_year={year}..."
             headers = {
@@ -67,20 +67,56 @@ def fetch_data(secret):
     
   
 
-def upload_data_to_azure(app_env,parquet_buffer):
+def upload_data_to_azure(app_env,parquet_buffer, response_all):
     logging.info(f"upload data in {app_env}-environment")
     # get connection string, container name and blob name to storage depending on environment
     if app_env.lower() == "prod":
         connection_string = os.getenv("PROD_Connection_string")
         container_name = os.getenv("PROD_container_name")
+        container_name_staging = os.getenv("PROD_container_name_staging")
         blob_name = os.getenv("PROD_blob_name")
+        blob_name_staging = os.getenv("PROD_blob_name_staging")
     else:
         connection_string = os.getenv("TEST_Connection_string")
         container_name = os.getenv("TEST_container_name")
+        container_name_staging = os.getenv("TEST_container_name_staging")
         blob_name = os.getenv("TEST_blob_name")
+        blob_name_staging = os.getenv("TEST_blob_name_staging")
      # connect to azure storage
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+   
 
-    # upload to azure storage
-    blob_client.upload_blob(parquet_buffer, overwrite=True)
+     # Upload JSON to staging container
+    try:
+        # Convert dictionary to JSON string
+        json_data = json.dumps(response_all)
+        
+        # Create blob client for staging container
+        staging_blob_client = blob_service_client.get_blob_client(
+            container=container_name_staging, 
+            blob=blob_name_staging
+        )
+        
+        # Upload JSON data
+        staging_blob_client.upload_blob(json_data, overwrite=True)
+        logging.info(f"Successfully uploaded JSON data to {container_name_staging}/{blob_name_staging}")
+    except Exception as e:
+        logging.error(f"Failed to upload JSON data to staging: {str(e)}")
+        raise
+    
+    # Upload parquet to bronze container
+    try:
+        # Create blob client for bronze container
+        bronze_blob_client = blob_service_client.get_blob_client(
+            container=container_name, 
+            blob=blob_name
+        )
+        
+        # Upload parquet data
+        bronze_blob_client.upload_blob(parquet_buffer, overwrite=True)
+        logging.info(f"Successfully uploaded parquet data to {container_name}/{blob_name}")
+    except Exception as e:
+        logging.error(f"Failed to upload parquet data to bronze: {str(e)}")
+        raise
+
+  

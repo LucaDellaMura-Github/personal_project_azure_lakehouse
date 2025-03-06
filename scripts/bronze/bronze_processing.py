@@ -87,7 +87,7 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
 
 
     try:
-        upload_data_to_azure(app_env,parquet_buffer)
+        upload_data_to_azure(app_env,parquet_buffer, response_all)
     except Exception as error:
         logging.error(f"error with uploading to azure: {type(error).__name__}, –, {error}")
         return func.HttpResponse(f"Failed to upload: {str(error)}", 
