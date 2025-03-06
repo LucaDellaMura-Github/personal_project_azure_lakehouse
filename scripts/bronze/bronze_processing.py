@@ -24,7 +24,7 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     try:
         secret = get_api_key(app_env, )
     except Exception as error: 
-        logging.error("something went wrong with getting the api key:", type(error).__name__, "–", error)
+        logging.error(f"something went wrong with getting the api key:, {type(error).__name__}, –, {error}")
 
 
     
@@ -32,7 +32,7 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     try:
         response_all = fetch_data(secret)
     except Exception as error:
-        logging.error("error with fetching all the data:", type(error).__name__, "–", error)
+        logging.error(f"error with fetching all the data: {type(error).__name__}, –, {error}")
 
     
     
@@ -40,7 +40,7 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     try:
         table = paj.read_json(io.BytesIO(json.dumps(response_all).encode()))
     except Exception as error:
-        logging.error("error with conversion into pa table:",type(error).__name__, "–", error)
+        logging.error(f"error with conversion into pa table:"{type(error).__name__} –, {error}")
 
     # add data auditability columns
 
@@ -52,7 +52,7 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
         table = table.append_column("ingestion_time", pa.array(ingestion_time))
         table = table.append_column("data_source", pa.array(data_source))
     except Exception as error:
-        logging.error("error with adding the metadata:", type(error).__name__, "–", error)
+        logging.error(f"error with adding the metadata:, {type(error).__name__},–, {error}")
 
     # convert to parquet
     try:
@@ -65,17 +65,18 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
         # Reset buffer position to the beginning
         parquet_buffer.seek(0)
     except Exception as error:
-        logging.error("error with converting pa table to parquet:",type(error).__name__, "–", error)
+        logging.error(f"error with converting pa table to parquet:,{type(error).__name__}, –, {error}")
 
     try:
         upload_data_to_azure(app_env,parquet_buffer)
     except Exception as error:
-        logging.error("error with uploading to azure:", type(error).__name__, "–", error)
+        logging.error(f"error with uploading to azure: {type(error).__name__}, –, {error}")
         
 
     #exit logging
     execution_time = (datetime.datetime.now() - request_time).total_seconds()
     logging.info(f"ingest_bronze_data completed successfully in {execution_time:.2f} seconds")
+    return func.HttpResponse(f"Data ingested successfully in {execution_time:.2f} seconds", status_code=200)
   
 
    
