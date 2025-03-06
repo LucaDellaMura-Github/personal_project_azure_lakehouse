@@ -37,7 +37,7 @@ def get_api_key(app_env):
 def fetch_data(secret):
     logging.info(f"fetching data from api")
     response_all = []
-    for year in range(2020, 2023):  # Example: 2 years
+    for year in range(2020, 2021):  # Example: 2 years
         for page in range(1, 51):  # 50 pages per year
             url = f"https://api.themoviedb.org/3/discover/movie?...page={page}&primary_release_year={year}..."
             headers = {

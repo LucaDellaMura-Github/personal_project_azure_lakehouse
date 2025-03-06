@@ -8,11 +8,19 @@ import os
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.json as paj
-import io
+from io import BytesIO
 from azure.storage.blob import BlobServiceClient
 import datetime
 from utils import get_api_key, fetch_data, upload_data_to_azure
+import pandas as pd
 
+
+logger =logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+if not logger.handlers:  # Avoid duplicate handlers
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+    logger.addHandler(handler)
 
 def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
     #entry logging
@@ -25,6 +33,9 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
         secret = get_api_key(app_env, )
     except Exception as error: 
         logging.error(f"something went wrong with getting the api key:, {type(error).__name__}, –, {error}")
+        return func.HttpResponse(f"Failed to retrieve api key: {str(error)}", 
+        status_code=500
+         )
 
 
     
@@ -33,52 +44,60 @@ def ingest_bronze_data(req: func.HttpRequest) -> func.HttpResponse:
         response_all = fetch_data(secret)
     except Exception as error:
         logging.error(f"error with fetching all the data: {type(error).__name__}, –, {error}")
+        return func.HttpResponse(f"Failed to fetch data key: {str(error)}", 
+        status_code=500
+         )
+
+      
 
     
     
-    # convert JSON into pyarrow table
+    # # convert JSON into pyarrow table
+    # try:
+    #     table = paj.read_json(io.BytesIO(json.dumps(response_all).encode()))
+    # except Exception as error:
+    #     logging.debug(f"Problematic data sample: {json.dumps(response_all[0], indent=2)}")
+    #     logging.error(f"error with conversion into pa table:{type(error).__name__} –, {error}")
+    #     return func.HttpResponse(f"Failed to transform into pa table: {str(error)}", 
+    #     status_code=500
+    #      )
     try:
-        table = paj.read_json(io.BytesIO(json.dumps(response_all).encode()))
-    except Exception as error:
-        logging.error(f"error with conversion into pa table:"{type(error).__name__} –, {error}")
-
-    # add data auditability columns
-
-    try: 
-        ingestion_time = pa.array([datetime.datetime.now().isoformat()] * len(table))  # Current time for all rows as pyarrow requires
-        data_source = pa.array(["api.themoviedb.org/3/discover/movie?include_adult=true&include_video=false&language=en-US&page={i}&primary_release_year=2023&sort_by=popularity.desc"] * len(table))  # Static source name for all rows
-
-        # Append metadata columns to the table
-        table = table.append_column("ingestion_time", pa.array(ingestion_time))
-        table = table.append_column("data_source", pa.array(data_source))
-    except Exception as error:
-        logging.error(f"error with adding the metadata:, {type(error).__name__},–, {error}")
-
-    # convert to parquet
-    try:
-
-        parquet_buffer = io.BytesIO()
+        logger.info(f"Processing {len(response_all)} movie records using pandas")
+        
+        # Convert JSON to pandas DataFrame
+        df = pd.DataFrame(response_all)
+        
+        # Add metadata columns
+        current_time = datetime.datetime.now().isoformat()
+        df['ingestion_time'] = current_time
+        df['data_source'] = "api.themoviedb.org/3/discover/movie?include_adult=true&include_video=false&language=en-US&page={i}&primary_release_year=2023&sort_by=popularity.desc"
+        
+        # Convert pandas DataFrame to PyArrow table
+        table = pa.Table.from_pandas(df)
+        
+        # Convert to parquet
+        parquet_buffer = BytesIO()
         pq.write_table(table, parquet_buffer)
-
-    
-    
-        # Reset buffer position to the beginning
         parquet_buffer.seek(0)
+        
     except Exception as error:
-        logging.error(f"error with converting pa table to parquet:,{type(error).__name__}, –, {error}")
+        logging.error(f"Error with pandas conversion: {type(error).__name__} – {error}")
+        return func.HttpResponse(f"Failed to transform with pandas: {str(error)}", status_code=500)
+    
+
 
     try:
         upload_data_to_azure(app_env,parquet_buffer)
     except Exception as error:
         logging.error(f"error with uploading to azure: {type(error).__name__}, –, {error}")
+        return func.HttpResponse(f"Failed to upload: {str(error)}", 
+        status_code=500
+         )
+
         
 
     #exit logging
     execution_time = (datetime.datetime.now() - request_time).total_seconds()
     logging.info(f"ingest_bronze_data completed successfully in {execution_time:.2f} seconds")
-    return func.HttpResponse(f"Data ingested successfully in {execution_time:.2f} seconds", status_code=200)
-  
 
-   
-        
-   
+    return func.HttpResponse(f"Data ingested successfully in {execution_time:.2f} seconds", status_code=200)
