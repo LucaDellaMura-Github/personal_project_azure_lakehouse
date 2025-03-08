@@ -63,27 +63,34 @@ def fetch_data(secret):
            
     
          
-
+def establish_connection_to_azure(app_env):
+    # get connection string, container name and blob name to storage depending on environment
+    logging.info(f"establsihing connection to azure")
+    if app_env.lower() == "prod":
+        config = {
+        "connection_string" : os.getenv("PROD_Connection_string"),
+        "container_name" : os.getenv("PROD_container_name"),
+        "container_name_staging" : os.getenv("PROD_container_name_staging"),
+        "blob_name" : os.getenv("PROD_blob_name"),
+        "blob_name_staging" : os.getenv("PROD_blob_name_staging")}
+    else:
+        config = {
+        "connection_string" : os.getenv("TEST_Connection_string"),
+        "container_name" : os.getenv("TEST_container_name"),
+        "container_name_staging" :  os.getenv("TEST_container_name_staging"),
+        "blob_name" : os.getenv("TEST_blob_name"),
+        "blob_name_staging" : os.getenv("TEST_blob_name_staging")
+                                      }
+     # connect to azure storage
+    blob_service_client = BlobServiceClient.from_connection_string(config["connection_string"])
+    return blob_service_client, config
     
   
 
 def upload_data_to_azure(app_env,parquet_buffer, response_all):
     logging.info(f"upload data in {app_env}-environment")
-    # get connection string, container name and blob name to storage depending on environment
-    if app_env.lower() == "prod":
-        connection_string = os.getenv("PROD_Connection_string")
-        container_name = os.getenv("PROD_container_name")
-        container_name_staging = os.getenv("PROD_container_name_staging")
-        blob_name = os.getenv("PROD_blob_name")
-        blob_name_staging = os.getenv("PROD_blob_name_staging")
-    else:
-        connection_string = os.getenv("TEST_Connection_string")
-        container_name = os.getenv("TEST_container_name")
-        container_name_staging = os.getenv("TEST_container_name_staging")
-        blob_name = os.getenv("TEST_blob_name")
-        blob_name_staging = os.getenv("TEST_blob_name_staging")
-     # connect to azure storage
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    
+    blob_service_client, config = establish_connection_to_azure(app_env)
    
 
      # Upload JSON to staging container
@@ -93,13 +100,13 @@ def upload_data_to_azure(app_env,parquet_buffer, response_all):
         
         # Create blob client for staging container
         staging_blob_client = blob_service_client.get_blob_client(
-            container=container_name_staging, 
-            blob=blob_name_staging
+            container=config["container_name_staging"], 
+            blob=config["blob_name_staging"]
         )
         
         # Upload JSON data
         staging_blob_client.upload_blob(json_data, overwrite=True)
-        logging.info(f"Successfully uploaded JSON data to {container_name_staging}/{blob_name_staging}")
+        logging.info(f"Successfully uploaded JSON data to {config["container_name_staging"]}/{config["blob_name_staging"]}")
     except Exception as e:
         logging.error(f"Failed to upload JSON data to staging: {str(e)}")
         raise
@@ -108,13 +115,13 @@ def upload_data_to_azure(app_env,parquet_buffer, response_all):
     try:
         # Create blob client for bronze container
         bronze_blob_client = blob_service_client.get_blob_client(
-            container=container_name, 
-            blob=blob_name
+            container=config["container_name"], 
+            blob=config["blob_name"]
         )
         
         # Upload parquet data
         bronze_blob_client.upload_blob(parquet_buffer, overwrite=True)
-        logging.info(f"Successfully uploaded parquet data to {container_name}/{blob_name}")
+        logging.info(f"Successfully uploaded parquet data to {config["container_name"]}/{config["blob_name"]}")
     except Exception as e:
         logging.error(f"Failed to upload parquet data to bronze: {str(e)}")
         raise
