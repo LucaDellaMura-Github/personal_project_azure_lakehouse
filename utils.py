@@ -18,6 +18,20 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[logging.StreamHandler()]
 )
+def initialisation(function_name):
+    logger =logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    if not logger.handlers:  # Avoid duplicate handlers
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+        logger.addHandler(handler)
+    #entry logging
+    request_time = datetime.datetime.now()
+    logging.info(f"{function_name} at {request_time.isoformat()}. Processing request.")
+    
+    # Determine the environment and pick the appropriate Key Vault URL
+    app_env = os.getenv("APP_ENV", "test")
+    return app_env, request_time
 
 def get_api_key(app_env):
     logging.info(f"fetching api key in {app_env}-environment")
