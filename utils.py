@@ -75,11 +75,8 @@ def fetch_data(secret):
     logging.info(f"Fetched {len(response_all)} movies in total")
     return response_all
            
-    
-         
-def establish_connection_to_azure(app_env):
-    # get connection string, container name and blob name to storage depending on environment
-    logging.info(f"establsihing connection to azure")
+def define_config(app_env):
+    logging.info(f"defining config dict with the connection variables")
     if app_env.lower() == "prod":
         config = {
         "connection_string" : os.getenv("PROD_Connection_string"),
@@ -93,8 +90,13 @@ def establish_connection_to_azure(app_env):
         "container_name" : os.getenv("TEST_container_name"),
         "container_name_staging" :  os.getenv("TEST_container_name_staging"),
         "blob_name" : os.getenv("TEST_blob_name"),
-        "blob_name_staging" : os.getenv("TEST_blob_name_staging")
-                                      }
+        "blob_name_staging" : os.getenv("TEST_blob_name_staging")}
+    return config
+         
+def establish_connection_to_azure(app_env):
+    # get connection string, container name and blob name to storage depending on environment
+    config = define_config(app_env)
+    logging.info(f"establishing connection to azure")
      # connect to azure storage
     blob_service_client = BlobServiceClient.from_connection_string(config["connection_string"])
     return blob_service_client, config
