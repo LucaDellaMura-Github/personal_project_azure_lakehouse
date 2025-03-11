@@ -122,7 +122,7 @@ def upload_data_to_azure(app_env,parquet_buffer, response_all):
         
         # Upload JSON data
         staging_blob_client.upload_blob(json_data, overwrite=True)
-        logging.info(f"Successfully uploaded JSON data to {config["container_name_staging"]}/{config["blob_name_staging"]}")
+        logging.info(f"Successfully uploaded JSON data to {config['container_name_staging']}/{config['blob_name_staging']}")
     except Exception as e:
         logging.error(f"Failed to upload JSON data to staging: {str(e)}")
         raise
